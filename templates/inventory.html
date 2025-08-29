@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>Inventario</h2>
+  <div>
+    <a class="btn btn-outline-secondary" href="{{ url_for('products') }}">Gestionar productos</a>
+    <a class="btn btn-outline-info" href="{{ url_for('movements') }}">Ver movimientos</a>
+  </div>
+</div>
+<table class="table table-bordered">
+<thead><tr><th>Producto</th><th>SKU</th><th style="width:120px">Stock</th><th></th></tr></thead>
+<tbody>
+{% for p in products %}
+<tr>
+  <td>{{ p.name }}</td>
+  <td>{{ p.sku or '' }}</td>
+  <td>{{ p.stock }}</td>
+    <td>
+        <a class="btn btn-sm btn-success" href="{{ url_for('new_purchase') }}">Compra</a>
+        <a class="btn btn-sm btn-danger" href="{{ url_for('new_sale') }}">Venta</a>
+    </td>
+
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endblock %}

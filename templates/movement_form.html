@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Registrar movimiento</h2>
+<form method="post" id="mov-form">
+  <div class="mb-3">
+    <label class="form-label">Producto</label>
+    <select class="form-select" name="product_id" id="product-select" required>
+      <option value="">-- seleccionar --</option>
+      {% for p in products %}
+      <option value="{{ p.id }}" data-stock="{{ p.stock }}" {% if request.args.get('product_id', type=int)==p.id %}selected{% endif %}>
+        {{ p.name }} (stock: {{ p.stock }})
+      </option>
+      {% endfor %}
+    </select>
+    <div class="form-text">Stock actual: <span id="current-stock">-</span></div>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Tipo</label>
+    <select class="form-select" name="type" id="type-select">
+      <option value="purchase" {% if request.args.get('type')=='purchase' %}selected{% endif %}>Compra (sumar)</option>
+      <option value="sale" {% if request.args.get('type')=='sale' %}selected{% endif %}>Venta (restar)</option>
+    </select>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Cantidad</label>
+    <input class="form-control" name="quantity" id="quantity" type="number" min="1" value="1" required>
+  </div>
+  <button class="btn btn-primary">Registrar</button>
+  <a class="btn btn-secondary" href="{{ url_for('inventory') }}">Cancelar</a>
+</form>
+
+<script>
+const prodSelect = document.getElementById('product-select');
+const stockSpan = document.getElementById('current-stock');
+const qtyInput = document.getElementById('quantity');
+const typeSelect = document.getElementById('type-select');
+
+function updateStockDisplay(){
+  const opt = prodSelect.selectedOptions[0];
+  if(!opt || !opt.value){ stockSpan.textContent = '-'; qtyInput.removeAttribute('max'); return; }
+  const stock = parseInt(opt.dataset.stock || '0');
+  stockSpan.textContent = stock;
+  if(typeSelect.value === 'sale'){
+    qtyInput.max = stock;
+  } else {
+    qtyInput.removeAttribute('max');
+  }
+}
+
+prodSelect.addEventListener('change', updateStockDisplay);
+typeSelect.addEventListener('change', updateStockDisplay);
+updateStockDisplay();
+</script>
+{% endblock %}

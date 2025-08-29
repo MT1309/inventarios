@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Registrar compra</h2>
+<form method="post">
+  <div class="mb-3">
+    <label class="form-label">Producto</label>
+    <select class="form-select" name="product_id" required>
+      <option value="">-- seleccionar --</option>
+      {% for p in products %}
+      <option value="{{ p.id }}">{{ p.name }} (stock: {{ p.stock }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Cantidad</label>
+    <input type="number" name="quantity" class="form-control" min="1" required>
+  </div>
+  <button class="btn btn-success">Registrar compra</button>
+  <a class="btn btn-secondary" href="{{ url_for('inventory') }}">Cancelar</a>
+</form>
+{% endblock %}
