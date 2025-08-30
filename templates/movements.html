@@ -1,18 +1,36 @@
 {% extends 'base.html' %}
 {% block content %}
 <h2>Movimientos (últimos 200)</h2>
+
 <table class="table">
-<thead><tr><th>Fecha</th><th>Producto</th><th>Tipo</th><th>Cantidad</th><th>Nota</th></tr></thead>
-<tbody>
-{% for m in movements %}
-<tr>
-  <td>{{ m.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-  <td>{{ m.product.name }}</td>
-  <td>{{ 'Compra' if m.type=='purchase' else 'Venta' }}</td>
-  <td>{{ m.quantity }}</td>
-  <td>{{ m.note or '' }}</td>
-</tr>
-{% endfor %}
-</tbody>
+  <thead>
+    <tr>
+      <th>Fecha</th>
+      <th>Producto</th>
+      <th>Tipo</th>
+      <th>Cantidad</th>
+      <th>Ganancia</th>
+      <th>Nota</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for m in movements %}
+    <tr>
+      <td>{{ m.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+      <td>{{ m.product.name }}</td>
+      <td>{{ 'Compra' if m.type == 'purchase' else 'Venta' }}</td>
+      <td>{{ m.quantity }}</td>
+      <td>
+        {% if m.type == 'sale' %}
+          {{ "%.2f"|format(m.profit) }}
+        {% else %}
+          -
+        {% endif %}
+      </td>
+      <td>{{ m.note or '' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
+
 {% endblock %}
