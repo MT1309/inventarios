@@ -28,6 +28,13 @@ class Movement(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     profit = db.Column(db.Float, default=0)  # ganancia
 
+class Client(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(50))
+    email = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 
 @app.route('/')
 def index():
@@ -92,6 +99,47 @@ def edit_product(product_id):
         flash('Producto actualizado', 'success')
         return redirect(url_for('products'))
     return render_template('product_form.html', action='Editar', product=p)
+
+@app.route('/clients')
+def clients():
+    clients = Client.query.order_by(Client.name).all()
+    return render_template('clients.html', clients=clients)
+
+@app.route('/clients/new', methods=['GET', 'POST'])
+def new_client():
+    if request.method == 'POST':
+        name = request.form['name'].strip()
+        phone = request.form.get('phone', '').strip()
+        email = request.form.get('email', '').strip()
+
+        if not name:
+            flash('El nombre es requerido.', 'danger')
+            return redirect(url_for('new_client'))
+
+        if Client.query.filter_by(name=name).first():
+            flash('Ya existe un cliente con ese nombre.', 'danger')
+            return redirect(url_for('new_client'))
+
+        c = Client(name=name, phone=phone, email=email)
+        db.session.add(c)
+        db.session.commit()
+        flash('Cliente creado.', 'success')
+        return redirect(url_for('clients'))
+
+    return render_template('client_form.html', action='Crear', client=None)
+
+@app.route('/clients/<int:client_id>/edit', methods=['GET', 'POST'])
+def edit_client(client_id):
+    c = Client.query.get_or_404(client_id)
+    if request.method == 'POST':
+        c.name = request.form['name'].strip()
+        c.phone = request.form.get('phone', '').strip()
+        c.email = request.form.get('email', '').strip()
+        db.session.commit()
+        flash('Cliente actualizado.', 'success')
+        return redirect(url_for('clients'))
+    return render_template('client_form.html', action='Editar', client=c)
+
 
 @app.route('/inventory')
 def inventory():
