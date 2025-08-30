@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{{ action }} Cliente</h2>
+
+<form method="POST">
+    <div class="mb-3">
+        <label for="name" class="form-label">Nombre *</label>
+        <input type="text" name="name" id="name" class="form-control" value="{{ client.name if client else '' }}" required>
+    </div>
+
+    <div class="mb-3">
+        <label for="phone" class="form-label">Teléfono</label>
+        <input type="text" name="phone" id="phone" class="form-control" value="{{ client.phone if client else '' }}">
+    </div>
+
+    <div class="mb-3">
+        <label for="email" class="form-label">Correo</label>
+        <input type="email" name="email" id="email" class="form-control" value="{{ client.email if client else '' }}">
+    </div>
+
+    <button type="submit" class="btn btn-success">{{ action }}</button>
+    <a href="{{ url_for('clients') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}
