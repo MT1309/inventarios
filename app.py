@@ -18,22 +18,23 @@ class Product(db.Model):
     price = db.Column(db.Float, default=0)  # precio unitario
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-class Movement(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
-    product = db.relationship('Product', backref=db.backref('movements', lazy=True))
-    quantity = db.Column(db.Integer, nullable=False)
-    type = db.Column(db.String(10), nullable=False)  # 'purchase' o 'sale'
-    note = db.Column(db.String(255))
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    profit = db.Column(db.Float, default=0)  # ganancia
-
 class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(50))
     email = db.Column(db.String(100))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Movement(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    product = db.relationship('Product', backref=db.backref('movements', lazy=True))
+    quantity = db.Column(db.Integer, nullable=False)
+    type = db.Column(db.String(10), nullable=False)  # 'purchase' o 'sale'
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    profit = db.Column(db.Float, default=0)  # ganancia
+    client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=True)
+    client = db.relationship('Client', backref='movements')
 
 
 @app.route('/')
@@ -88,13 +89,13 @@ def edit_product(product_id):
             flash('Stock inválido', 'danger')
             return redirect(url_for('edit_product', product_id=product_id))
         try:
-            cost = float(request.form.get('cost', 0))
+            p.cost = float(request.form.get('cost', 0))
         except ValueError:
-            cost = 0
+            p.cost = 0
         try:
-            price = float(request.form.get('price', 0))
+            p.price = float(request.form.get('price', 0))
         except ValueError:
-            price = 0
+            p.price = 0
         db.session.commit()
         flash('Producto actualizado', 'success')
         return redirect(url_for('products'))
@@ -146,61 +147,37 @@ def inventory():
     products = Product.query.order_by(Product.name).all()
     return render_template('inventory.html', products=products)
 
-@app.route('/movement/new', methods=['GET', 'POST'])
-def new_movement():
-    products = Product.query.order_by(Product.name).all()
-    if request.method == 'POST':
-        product_id = int(request.form['product_id'])
-        mtype = request.form['type']
-        try:
-            qty = int(request.form['quantity'])
-        except ValueError:
-            flash('Cantidad inválida', 'danger')
-            return redirect(url_for('new_movement'))
-        product = Product.query.get_or_404(product_id)
-        if qty <= 0:
-            flash('Cantidad debe ser mayor a 0', 'danger')
-            return redirect(url_for('new_movement'))
-        if mtype == 'sale' and product.stock < qty:
-            flash(f'Stock insuficiente. Stock actual: {product.stock}', 'danger')
-            return redirect(url_for('new_movement'))
-        # aplicar cambio
-        if mtype == 'purchase':
-            product.stock += qty
-        else:
-            product.stock -= qty
-        mov = Movement(product=product, quantity=qty, type=mtype)
-        db.session.add(mov)
-        db.session.commit()
-        flash('Movimiento registrado', 'success')
-        return redirect(url_for('inventory'))
-    return render_template('movement_form.html', products=products)
 
 @app.route('/purchase/new', methods=['GET', 'POST'])
 def new_purchase():
     products = Product.query.order_by(Product.name).all()
+    clients = Client.query.order_by(Client.name).all()
     if request.method == 'POST':
         product_id = int(request.form['product_id'])
         qty = int(request.form['quantity'])
+        client_id = request.form.get('client_id')
         if qty <= 0:
             flash('La cantidad debe ser mayor a 0', 'danger')
             return redirect(url_for('new_purchase'))
         product = Product.query.get_or_404(product_id)
         product.stock += qty
-        mov = Movement(product=product, quantity=qty, type='purchase', profit=0)
+        mov = Movement(product=product, quantity=qty, type='purchase',
+                       profit=0, client_id=client_id if client_id else None)
         db.session.add(mov)
         db.session.commit()
         flash('Compra registrada', 'success')
         return redirect(url_for('inventory'))
-    return render_template('purchase_form.html', products=products)
+    return render_template('purchase_form.html', products=products, clients=clients)
 
 
 @app.route('/sale/new', methods=['GET', 'POST'])
 def new_sale():
     products = Product.query.order_by(Product.name).all()
+    clients = Client.query.order_by(Client.name).all()
     if request.method == 'POST':
         product_id = int(request.form['product_id'])
         qty = int(request.form['quantity'])
+        client_id = request.form.get('client_id')
         if qty <= 0:
             flash('La cantidad debe ser mayor a 0', 'danger')
             return redirect(url_for('new_sale'))
@@ -210,13 +187,13 @@ def new_sale():
             return redirect(url_for('new_sale'))
         product.stock -= qty
         profit = (product.price - product.cost) * qty
-        mov = Movement(product=product, quantity=qty, type='sale', profit=profit)
-
+        mov = Movement(product=product, quantity=qty, type='sale',
+                       profit=profit, client_id=client_id if client_id else None)
         db.session.add(mov)
         db.session.commit()
         flash('Venta registrada', 'success')
         return redirect(url_for('inventory'))
-    return render_template('sale_form.html', products=products)
+    return render_template('sale_form.html', products=products, clients=clients)
 
 
 @app.route('/movements')
