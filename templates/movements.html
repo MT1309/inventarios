@@ -10,7 +10,7 @@
       <th>Tipo</th>
       <th>Cantidad</th>
       <th>Ganancia</th>
-      <th>Nota</th>
+      <th>Cliente</th>
     </tr>
   </thead>
   <tbody>
@@ -27,7 +27,7 @@
           -
         {% endif %}
       </td>
-      <td>{{ m.note or '' }}</td>
+      <td>{{ m.client.name if m.client else '' }}</td>
     </tr>
     {% endfor %}
   </tbody>
