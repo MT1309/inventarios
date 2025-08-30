@@ -7,21 +7,32 @@
     <a class="btn btn-outline-info" href="{{ url_for('movements') }}">Ver movimientos</a>
   </div>
 </div>
+
 <table class="table table-bordered">
-<thead><tr><th>Producto</th><th>SKU</th><th style="width:120px">Stock</th><th></th></tr></thead>
-<tbody>
-{% for p in products %}
-<tr>
-  <td>{{ p.name }}</td>
-  <td>{{ p.sku or '' }}</td>
-  <td>{{ p.stock }}</td>
-    <td>
+  <thead>
+    <tr>
+      <th>Producto</th>
+      <th>SKU</th>
+      <th>Stock</th>
+      <th>Costo</th>
+      <th>Precio</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in products %}
+    <tr>
+      <td>{{ p.name }}</td>
+      <td>{{ p.sku or '' }}</td>
+      <td>{{ p.stock }}</td>
+      <td>{{ "%.2f"|format(p.cost) }}</td>
+      <td>{{ "%.2f"|format(p.price) }}</td>
+      <td>
         <a class="btn btn-sm btn-success" href="{{ url_for('new_purchase') }}">Compra</a>
         <a class="btn btn-sm btn-danger" href="{{ url_for('new_sale') }}">Venta</a>
-    </td>
-
-</tr>
-{% endfor %}
-</tbody>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 {% endblock %}

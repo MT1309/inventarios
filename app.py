@@ -11,9 +11,11 @@ db = SQLAlchemy(app)
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), nullable=False, unique=True)
-    sku = db.Column(db.String(50), unique=True)
-    stock = db.Column(db.Integer, default=0, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    sku = db.Column(db.String(50), unique=True, nullable=True)
+    stock = db.Column(db.Integer, default=0)
+    cost = db.Column(db.Float, default=0)   # costo unitario
+    price = db.Column(db.Float, default=0)  # precio unitario
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Movement(db.Model):
@@ -21,9 +23,11 @@ class Movement(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
     product = db.relationship('Product', backref=db.backref('movements', lazy=True))
     quantity = db.Column(db.Integer, nullable=False)
-    type = db.Column(db.String(10), nullable=False)  # 'purchase' or 'sale'
+    type = db.Column(db.String(10), nullable=False)  # 'purchase' o 'sale'
     note = db.Column(db.String(255))
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    profit = db.Column(db.Float, default=0)  # ganancia
+
 
 @app.route('/')
 def index():
@@ -43,18 +47,27 @@ def new_product():
             initial = int(request.form.get('stock', 0))
         except ValueError:
             initial = 0
+        try:
+            cost = float(request.form.get('cost', 0))
+        except ValueError:
+            cost = 0
+        try:
+            price = float(request.form.get('price', 0))
+        except ValueError:
+            price = 0
         if not name:
             flash('El nombre es requerido.', 'danger')
             return redirect(url_for('new_product'))
         if Product.query.filter_by(name=name).first():
             flash('Ya existe un producto con ese nombre.', 'danger')
             return redirect(url_for('new_product'))
-        p = Product(name=name, sku=sku, stock=initial)
+        p = Product(name=name, sku=sku, stock=initial, cost=cost, price=price)
         db.session.add(p)
         db.session.commit()
         flash('Producto creado.', 'success')
         return redirect(url_for('products'))
     return render_template('product_form.html', action='Crear', product=None)
+
 
 @app.route('/products/<int:product_id>/edit', methods=['GET', 'POST'])
 def edit_product(product_id):
@@ -67,6 +80,14 @@ def edit_product(product_id):
         except ValueError:
             flash('Stock inválido', 'danger')
             return redirect(url_for('edit_product', product_id=product_id))
+        try:
+            cost = float(request.form.get('cost', 0))
+        except ValueError:
+            cost = 0
+        try:
+            price = float(request.form.get('price', 0))
+        except ValueError:
+            price = 0
         db.session.commit()
         flash('Producto actualizado', 'success')
         return redirect(url_for('products'))
@@ -118,7 +139,7 @@ def new_purchase():
             return redirect(url_for('new_purchase'))
         product = Product.query.get_or_404(product_id)
         product.stock += qty
-        mov = Movement(product=product, quantity=qty, type='purchase')
+        mov = Movement(product=product, quantity=qty, type='purchase', profit=0)
         db.session.add(mov)
         db.session.commit()
         flash('Compra registrada', 'success')
@@ -140,7 +161,9 @@ def new_sale():
             flash(f'Stock insuficiente. Stock actual: {product.stock}', 'danger')
             return redirect(url_for('new_sale'))
         product.stock -= qty
-        mov = Movement(product=product, quantity=qty, type='sale')
+        profit = (product.price - product.cost) * qty
+        mov = Movement(product=product, quantity=qty, type='sale', profit=profit)
+
         db.session.add(mov)
         db.session.commit()
         flash('Venta registrada', 'success')
@@ -157,3 +180,6 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()  # crea la DB y tablas si no existen
     app.run(debug=True)
+
+## Para iniciar la app.py utilizamos: venv\Scripts\Activate.ps1
+## Luego: python app.py
