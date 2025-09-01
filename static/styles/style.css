@@ -1,0 +1,141 @@
+/* ====== style.css ====== */
+
+/* Fuente y reset */
+body {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f9ff;
+    color: #333;
+}
+
+/* Navbar o header */
+nav {
+    background-color: #0d6efd;
+    padding: 1rem;
+}
+
+nav a {
+    color: rgb(255, 255, 255);
+    text-decoration: none;
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+/* Encabezados */
+h1, h2, h3 {
+    color: #0d6efd;
+    margin-bottom: 1rem;
+}
+
+/* Tablas */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2rem;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-top: 30px;
+}
+
+th, td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e0e0e0;
+    text-align: left;
+}
+
+th {
+    background-color: #0d6efd;
+    color: white;
+}
+
+tr:hover {
+    background-color: #eef5ff;
+}
+
+/* Formularios */
+form {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    max-width: 600px;
+}
+
+label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+input, select {
+    width: 100%;
+    padding: 0.6rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: #0d6efd;
+    box-shadow: 0 0 4px rgba(13,110,253,0.4);
+}
+
+/* Botones */
+.btn {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #012d70;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #bb2d3b;
+}
+
+.btn-success {
+    background-color: #198754;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #157347;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #5c636a;
+}
+
+/* Contenedor */
+.container {
+    max-width: 1100px;
+    margin: auto;
+    padding: 2rem;
+}
