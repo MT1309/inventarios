@@ -8,6 +8,28 @@
   </div>
 </div>
 
+<form method="get" class="mb-3">
+  <div class="row g-2">
+    <div class="col-md-6">
+      <input type="text" name="search" class="form-control"
+             placeholder="Buscar producto..." value="{{ search }}">
+    </div>
+    <div class="col-md-4">
+      <select name="category_id" class="form-select">
+        <option value="">-- Todas las categorías --</option>
+        {% for cat in categories %}
+          <option value="{{ cat.id }}" {% if category_id and category_id == cat.id %}selected{% endif %}>
+            {{ cat.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 d-grid">
+      <button type="submit" class="btn btn-primary">Buscar</button>
+    </div>
+  </div>
+</form>
+
 <table class="table table-bordered">
   <thead>
     <tr>

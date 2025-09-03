@@ -17,6 +17,11 @@ class Product(db.Model):
     cost = db.Column(db.Float, default=0)   # costo unitario
     price = db.Column(db.Float, default=0)  # precio unitario
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=True)
+    category = db.relationship('Category', backref='products')
+
+    def __repr__(self):
+        return f'<Product {self.name}>'
 
 class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -36,6 +41,11 @@ class Movement(db.Model):
     client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=True)
     client = db.relationship('Client', backref='movements')
 
+class Category(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 
 @app.route('/')
 def index():
@@ -48,6 +58,8 @@ def products():
 
 @app.route('/products/new', methods=['GET', 'POST'])
 def new_product():
+    categories = Category.query.order_by(Category.name).all()  # 🔹 Traemos las categorías
+
     if request.method == 'POST':
         name = request.form['name'].strip()
         sku = request.form.get('sku', '').strip()
@@ -63,23 +75,40 @@ def new_product():
             price = float(request.form.get('price', 0))
         except ValueError:
             price = 0
+        category_id = request.form.get('category_id')  # 🔹 Nuevo campo
+
         if not name:
             flash('El nombre es requerido.', 'danger')
             return redirect(url_for('new_product'))
         if Product.query.filter_by(name=name).first():
             flash('Ya existe un producto con ese nombre.', 'danger')
             return redirect(url_for('new_product'))
-        p = Product(name=name, sku=sku, stock=initial, cost=cost, price=price)
+
+        p = Product(
+            name=name,
+            sku=sku,
+            stock=initial,
+            cost=cost,
+            price=price,
+            category_id=category_id if category_id else None  # 🔹 Guardamos categoría
+        )
         db.session.add(p)
         db.session.commit()
         flash('Producto creado.', 'success')
         return redirect(url_for('products'))
-    return render_template('product_form.html', action='Crear', product=None)
 
+    return render_template(
+        'product_form.html',
+        action='Crear',
+        product=None,
+        categories=categories   # 🔹 Pasamos categorías al template
+    )
 
 @app.route('/products/<int:product_id>/edit', methods=['GET', 'POST'])
 def edit_product(product_id):
     p = Product.query.get_or_404(product_id)
+    categories = Category.query.order_by(Category.name).all()  # 🔹 Traemos categorías
+
     if request.method == 'POST':
         p.name = request.form['name'].strip()
         p.sku = request.form.get('sku', '').strip()
@@ -96,10 +125,20 @@ def edit_product(product_id):
             p.price = float(request.form.get('price', 0))
         except ValueError:
             p.price = 0
+
+        category_id = request.form.get('category_id')  # 🔹 Nuevo campo
+        p.category_id = category_id if category_id else None
+
         db.session.commit()
         flash('Producto actualizado', 'success')
         return redirect(url_for('products'))
-    return render_template('product_form.html', action='Editar', product=p)
+
+    return render_template(
+        'product_form.html',
+        action='Editar',
+        product=p,
+        categories=categories   # 🔹 Pasamos categorías al template
+    )
 
 @app.route('/clients')
 def clients():
@@ -144,8 +183,28 @@ def edit_client(client_id):
 
 @app.route('/inventory')
 def inventory():
-    products = Product.query.order_by(Product.name).all()
-    return render_template('inventory.html', products=products)
+    search = request.args.get('search', '').strip()
+    category_id = request.args.get('category_id', type=int)
+
+    query = Product.query
+
+    # Filtro por texto
+    if search:
+        query = query.filter(Product.name.ilike(f"%{search}%"))
+
+    # Filtro por categoría
+    if category_id:
+        query = query.filter(Product.category_id == category_id)
+
+    products = query.order_by(Product.name).all()
+    categories = Category.query.order_by(Category.name).all()
+
+    return render_template('inventory.html',
+                           products=products,
+                           categories=categories,
+                           search=search,
+                           category_id=category_id)
+
 
 
 @app.route('/purchase/new', methods=['GET', 'POST'])
@@ -200,6 +259,41 @@ def new_sale():
 def movements():
     movements = Movement.query.order_by(Movement.timestamp.desc()).limit(200).all()
     return render_template('movements.html', movements=movements)
+
+@app.route('/categories')
+def categories():
+    categories = Category.query.order_by(Category.name).all()
+    return render_template('categories.html', categories=categories)
+
+@app.route('/categories/new', methods=['GET', 'POST'])
+def new_category():
+    if request.method == 'POST':
+        name = request.form['name'].strip()
+        if not name:
+            flash('El nombre es requerido.', 'danger')
+            return redirect(url_for('new_category'))
+
+        if Category.query.filter_by(name=name).first():
+            flash('Ya existe una categoría con ese nombre.', 'danger')
+            return redirect(url_for('new_category'))
+
+        c = Category(name=name)
+        db.session.add(c)
+        db.session.commit()
+        flash('Categoría creada.', 'success')
+        return redirect(url_for('categories'))
+
+    return render_template('category_form.html', action='Crear', category=None)
+
+@app.route('/categories/<int:category_id>/edit', methods=['GET', 'POST'])
+def edit_category(category_id):
+    c = Category.query.get_or_404(category_id)
+    if request.method == 'POST':
+        c.name = request.form['name'].strip()
+        db.session.commit()
+        flash('Categoría actualizada.', 'success')
+        return redirect(url_for('categories'))
+    return render_template('category_form.html', action='Editar', category=c)
 
 if __name__ == '__main__':
     with app.app_context():

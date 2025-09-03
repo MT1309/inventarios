@@ -25,6 +25,19 @@
           value="{{ product.price if product else 0 }}">
   </div>
 
+  <div class="mb-3">
+  <label class="form-label">Categoría</label>
+  <select name="category_id" class="form-select">
+    <option value="">-- Sin categoría --</option>
+    {% for c in categories %}
+      <option value="{{ c.id }}"
+        {% if product and product.category_id == c.id %}selected{% endif %}>
+        {{ c.name }}
+      </option>
+    {% endfor %}
+  </select>
+</div>
+
   <button class="btn btn-primary">{{ action }}</button>
   <a class="btn btn-secondary" href="{{ url_for('products') }}">Cancelar</a>
 </form>

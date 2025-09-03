@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Categorías</h2>
+<a class="btn btn-primary mb-3" href="{{ url_for('new_category') }}">Nueva categoría</a>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% if categories %}
+    {% for c in categories %}
+    <tr>
+      <td>{{ c.name }}</td>
+      <td>
+        <a class="btn btn-sm btn-warning" href="{{ url_for('edit_category', category_id=c.id) }}">Editar</a>
+      </td>
+    </tr>
+    {% endfor %}
+  {% else %}
+    <tr>
+      <td colspan="2" class="text-center">No hay categorías registradas.</td>
+    </tr>
+  {% endif %}
+</tbody>
+</table>
+{% endblock %}
